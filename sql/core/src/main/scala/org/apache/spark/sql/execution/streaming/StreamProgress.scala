@@ -19,6 +19,8 @@ package org.apache.spark.sql.execution.streaming
 
 import scala.collection.{immutable, GenTraversableOnce}
 
+import org.apache.spark.sql.sources.v2.reader.Offset
+
 /**
  * A helper class that looks like a Map[Source, Offset].
  */
@@ -26,8 +28,8 @@ class StreamProgress(
     val baseMap: immutable.Map[Source, Offset] = new immutable.HashMap[Source, Offset])
   extends scala.collection.immutable.Map[Source, Offset] {
 
-  private[sql] def toCompositeOffset(source: Seq[Source]): CompositeOffset = {
-    CompositeOffset(source.map(get))
+  def toOffsetSeq(source: Seq[Source], metadata: OffsetSeqMetadata): OffsetSeq = {
+    OffsetSeq(source.map(get), Some(metadata))
   }
 
   override def toString: String =

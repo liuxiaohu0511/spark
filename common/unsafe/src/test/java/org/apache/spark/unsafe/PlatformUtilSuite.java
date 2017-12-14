@@ -17,6 +17,9 @@
 
 package org.apache.spark.unsafe;
 
+import org.apache.spark.unsafe.memory.MemoryAllocator;
+import org.apache.spark.unsafe.memory.MemoryBlock;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -57,5 +60,30 @@ public class PlatformUtilSuite {
     for (int i = 0; i < size; ++i) {
       Assert.assertEquals((byte)i, data[i + 1]);
     }
+  }
+
+  @Test
+  public void memoryDebugFillEnabledInTest() {
+    Assert.assertTrue(MemoryAllocator.MEMORY_DEBUG_FILL_ENABLED);
+    MemoryBlock onheap = MemoryAllocator.HEAP.allocate(1);
+    Assert.assertEquals(
+      Platform.getByte(onheap.getBaseObject(), onheap.getBaseOffset()),
+      MemoryAllocator.MEMORY_DEBUG_FILL_CLEAN_VALUE);
+
+    MemoryBlock onheap1 = MemoryAllocator.HEAP.allocate(1024 * 1024);
+    MemoryAllocator.HEAP.free(onheap1);
+    Assert.assertEquals(
+      Platform.getByte(onheap1.getBaseObject(), onheap1.getBaseOffset()),
+      MemoryAllocator.MEMORY_DEBUG_FILL_FREED_VALUE);
+    MemoryBlock onheap2 = MemoryAllocator.HEAP.allocate(1024 * 1024);
+    Assert.assertEquals(
+      Platform.getByte(onheap2.getBaseObject(), onheap2.getBaseOffset()),
+      MemoryAllocator.MEMORY_DEBUG_FILL_CLEAN_VALUE);
+
+    MemoryBlock offheap = MemoryAllocator.UNSAFE.allocate(1);
+    Assert.assertEquals(
+      Platform.getByte(offheap.getBaseObject(), offheap.getBaseOffset()),
+      MemoryAllocator.MEMORY_DEBUG_FILL_CLEAN_VALUE);
+    MemoryAllocator.UNSAFE.free(offheap);
   }
 }

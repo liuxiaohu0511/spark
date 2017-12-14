@@ -56,6 +56,9 @@ public class HeapMemoryAllocator implements MemoryAllocator {
             final MemoryBlock memory = blockReference.get();
             if (memory != null) {
               assert (memory.size() == size);
+              if (MemoryAllocator.MEMORY_DEBUG_FILL_ENABLED) {
+                memory.fill(MemoryAllocator.MEMORY_DEBUG_FILL_CLEAN_VALUE);
+              }
               return memory;
             }
           }
@@ -64,12 +67,19 @@ public class HeapMemoryAllocator implements MemoryAllocator {
       }
     }
     long[] array = new long[(int) ((size + 7) / 8)];
-    return new MemoryBlock(array, Platform.LONG_ARRAY_OFFSET, size);
+    MemoryBlock memory = new MemoryBlock(array, Platform.LONG_ARRAY_OFFSET, size);
+    if (MemoryAllocator.MEMORY_DEBUG_FILL_ENABLED) {
+      memory.fill(MemoryAllocator.MEMORY_DEBUG_FILL_CLEAN_VALUE);
+    }
+    return memory;
   }
 
   @Override
   public void free(MemoryBlock memory) {
     final long size = memory.size();
+    if (MemoryAllocator.MEMORY_DEBUG_FILL_ENABLED) {
+      memory.fill(MemoryAllocator.MEMORY_DEBUG_FILL_FREED_VALUE);
+    }
     if (shouldPool(size)) {
       synchronized (this) {
         LinkedList<WeakReference<MemoryBlock>> pool = bufferPoolsBySize.get(size);

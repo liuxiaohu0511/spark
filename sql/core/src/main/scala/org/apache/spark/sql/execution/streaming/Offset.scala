@@ -17,21 +17,16 @@
 
 package org.apache.spark.sql.execution.streaming
 
+import org.apache.spark.sql.sources.v2.reader.Offset
+
+
 /**
- * An offset is a monotonically increasing metric used to track progress in the computation of a
- * stream. An [[Offset]] must be comparable, and the result of `compareTo` must be consistent
- * with `equals` and `hashcode`.
+ * Used when loading a JSON serialized offset from external storage.
+ * We are currently not responsible for converting JSON serialized
+ * data into an internal (i.e., object) representation. Sources should
+ * define a factory method in their source Offset companion objects
+ * that accepts a [[SerializedOffset]] for doing the conversion.
  */
-trait Offset extends Serializable {
+case class SerializedOffset(override val json: String) extends Offset
 
-  /**
-   * Returns a negative integer, zero, or a positive integer as this object is less than, equal to,
-   * or greater than the specified object.
-   */
-  def compareTo(other: Offset): Int
 
-  def >(other: Offset): Boolean = compareTo(other) > 0
-  def <(other: Offset): Boolean = compareTo(other) < 0
-  def <=(other: Offset): Boolean = compareTo(other) <= 0
-  def >=(other: Offset): Boolean = compareTo(other) >= 0
-}
